@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskPro - Task Management Simplified</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Welcome Page -->
+    <div id="welcome-page" class="page active">
+        <div class="container welcome-container">
+            <h1 class="app-title">TaskPro</h1>
+            
+            <!-- IH#1: Communicate benefits and value -->
+            <p class="tagline">Task management simplified for students</p>
+            
+            <div class="app-description">
+                <!-- IH#1: Communicate benefits and value -->
+                <p>TaskPro helps you track assignments, manage due dates, and organize class tasks all in one place.</p>
+                
+                <!-- IH#2: Communicate costs -->
+                <p class="time-estimate">Sign up takes less than 1 minute. Adding tasks takes seconds.</p>
+            </div>
+            
+            <div class="auth-form">
+                <input type="text" id="username" placeholder="Username" aria-label="Username">
+                <input type="password" id="password" placeholder="Password" aria-label="Password">
+                
+                <div class="auth-buttons">
+                    <!-- IH#7: Provide redundancy (keyboard shortcut) -->
+                    <button id="login-btn" class="btn primary-btn">Login <span class="shortcut-hint">(or press Enter)</span></button>
+                    <button id="signup-btn" class="btn secondary-btn">Sign Up</button>
+                </div>
+            </div>
+            
+            <div class="welcome-image">
+                <img src="task-illustration.png" alt="Task management illustration" class="task-image">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Dashboard -->
+    <div id="dashboard-page" class="page">
+        <header class="app-header">
+            <h1>My Tasks</h1>
+            
+            <!-- IH#4: Leverage existing mental models (familiar navigation) -->
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" class="active" id="nav-dashboard">Dashboard</a></li>
+                    <li><a href="#" id="nav-add-task">Add Task</a></li>
+                    <li><a href="#" id="nav-help">Help</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="container dashboard-container">
+            <div class="dashboard-actions">
+                <!-- IH#3: User control (filtering options) -->
+                <div class="filter-options">
+                    <label for="sort-tasks">Sort: </label>
+                    <select id="sort-tasks">
+                        <option value="due-date">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="class">Class</option>
+                    </select>
+                </div>
+                
+                <!-- IH#6: Guide users (clear next steps) -->
+                <button id="dashboard-add-task" class="btn primary-btn">+ Add Task</button>
+                
+                <!-- IH#4: Leverage existing mental models (search like Google) -->
+                <div class="search-box">
+                    <input type="text" id="task-search" placeholder="Search tasks..." aria-label="Search tasks">
+                    <button id="search-btn" aria-label="Search"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+            
+            <div class="tasks-list" id="tasks-container">
+                <!-- Example task -->
+                <div class="task-item" data-task-id="1">
+                    <input type="checkbox" class="task-checkbox" id="task1" aria-label="Mark task as complete">
+                    <div class="task-content">
+                        <h3 class="task-title">CS361 Assignment 3</h3>
+                        <div class="task-details">
+                            <span class="task-due">Due: Apr 25, 2025</span>
+                            <span class="task-class">CS361</span>
+                            <span class="task-status">Incomplete</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <!-- IH#7: Provide redundancy (multiple ways to edit) -->
+                        <button class="edit-task icon-btn" aria-label="Edit task"><i class="fas fa-edit"></i></button>
+                        <button class="delete-task icon-btn" aria-label="Delete task"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                
+                <!-- Another example task -->
+                <div class="task-item" data-task-id="2">
+                    <input type="checkbox" class="task-checkbox" id="task2" checked aria-label="Mark task as complete">
+                    <div class="task-content">
+                        <h3 class="task-title">Study for Midterm</h3>
+                        <div class="task-details">
+                            <span class="task-due">Due: Apr 28, 2025</span>
+                            <span class="task-class">MATH241</span>
+                            <span class="task-status">In Progress</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="edit-task icon-btn" aria-label="Edit task"><i class="fas fa-edit"></i></button>
+                        <button class="delete-task icon-btn" aria-label="Delete task"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Task Page -->
+    <div id="add-task-page" class="page">
+        <header class="app-header">
+            <h1>Add New Task</h1>
+            
+            <!-- IH#5: Provide multiple paths (back button) -->
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" id="nav-dashboard-from-add">Dashboard</a></li>
+                    <li><a href="#" class="active" id="nav-add-task-from-add">Add Task</a></li>
+                    <li><a href="#" id="nav-help-from-add">Help</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="container">
+            <!-- IH#2: Communicate costs -->
+            <p class="time-estimate">Creating a task takes approximately 30 seconds</p>
+            
+            <!-- IH#6: Provide an explicit path through the task -->
+            <form id="add-task-form" class="task-form">
+                <div class="form-group">
+                    <label for="task-title">Task Title: <span class="required">*</span></label>
+                    <input type="text" id="task-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="due-date">Due Date: <span class="required">*</span></label>
+                    <input type="date" id="due-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-class">Class/Category:</label>
+                    <input type="text" id="task-class" placeholder="e.g., CS361, MATH241">
+                </div>
+                
+                <div class="form-group">
+                    <!-- IH#8: Encourage tinkerers to tinker mindfully (tooltip explains consequences) -->
+                    <label for="task-priority" class="tooltip-container">
+                        Priority:
+                        <span class="tooltip-text">High priority tasks will appear at the top of your dashboard and generate reminders.</span>
+                    </label>
+                    <select id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-description">Description:</label>
+                    <textarea id="task-description" rows="4"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn primary-btn">Submit</button>
+                    <!-- IH#5: Make Undo/Redo and Backtracking Available -->
+                    <button type="button" id="cancel-add" class="btn secondary-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Task Details Page -->
+    <div id="task-details-page" class="page">
+        <header class="app-header">
+            <h1>Task Details</h1>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" id="nav-dashboard-from-details">Dashboard</a></li>
+                    <li><a href="#" id="nav-add-task-from-details">Add Task</a></li>
+                    <li><a href="#" id="nav-help-from-details">Help</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="container">
+            <!-- IH#3: Let Users Gather as Much Information as They Want -->
+            <div class="task-details-container">
+                <h2 id="detail-task-title">CS361 Assignment 3</h2>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Due Date:</span>
+                    <span id="detail-due-date">Apr 25, 2025</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Class/Category:</span>
+                    <span id="detail-class">CS361</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Priority:</span>
+                    <span id="detail-priority">High</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span id="detail-status">Incomplete</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <p id="detail-description">Complete the microservices implementation with appropriate API endpoints. Be sure to include error handling and documentation.</p>
+                </div>
+                
+                <div class="detail-actions">
+                    <button id="mark-complete-btn" class="btn primary-btn">Mark Complete</button>
+                    <button id="edit-task-btn" class="btn secondary-btn">Edit</button>
+                    <button id="delete-task-btn" class="btn danger-btn">Delete</button>
+                    <!-- IH#5: Make Undo/Redo and Backtracking Available -->
+                    <button id="back-to-dashboard" class="btn tertiary-btn">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Task Page -->
+    <div id="edit-task-page" class="page">
+        <header class="app-header">
+            <h1>Edit Task</h1>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" id="nav-dashboard-from-edit">Dashboard</a></li>
+                    <li><a href="#" id="nav-add-task-from-edit">Add Task</a></li>
+                    <li><a href="#" id="nav-help-from-edit">Help</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="container">
+            <form id="edit-task-form" class="task-form">
+                <div class="form-group">
+                    <label for="edit-task-title">Task Title: <span class="required">*</span></label>
+                    <input type="text" id="edit-task-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-due-date">Due Date: <span class="required">*</span></label>
+                    <input type="date" id="edit-due-date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-class">Class/Category:</label>
+                    <input type="text" id="edit-task-class">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-priority" class="tooltip-container">
+                        Priority:
+                        <span class="tooltip-text">High priority tasks will appear at the top of your dashboard and generate reminders.</span>
+                    </label>
+                    <select id="edit-task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-description">Description:</label>
+                    <textarea id="edit-task-description" rows="4"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <!-- IH#7: Provide redundancy (keyboard shortcut) -->
+                    <button type="submit" class="btn primary-btn">Save Changes <span class="shortcut-hint">(Ctrl+S)</span></button>
+                    <!-- IH#5: Make Undo/Redo and Backtracking Available -->
+                    <button type="button" id="cancel-edit" class="btn secondary-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Help & Support Page -->
+    <div id="help-page" class="page">
+        <header class="app-header">
+            <h1>Help & Support</h1>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" id="nav-dashboard-from-help">Dashboard</a></li>
+                    <li><a href="#" id="nav-add-task-from-help">Add Task</a></li>
+                    <li><a href="#" class="active" id="nav-help-from-help">Help</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <div class="container">
+            <div class="help-section">
+                <h2>How to Use TaskPro</h2>
+                
+                <!-- IH#6: Provide an explicit path through the task -->
+                <div class="guide-section">
+                    <h3>Creating a New Task</h3>
+                    <ol>
+                        <li>Click on the "+ Add Task" button from the dashboard</li>
+                        <li>Fill in the required fields (Task Title and Due Date)</li>
+                        <li>Add optional details if needed</li>
+                        <li>Click "Submit" to save your task</li>
+                    </ol>
+                </div>
+                
+                <div class="guide-section">
+                    <h3>Managing Your Tasks</h3>
+                    <ul>
+                        <li>View all your tasks on the Dashboard</li>
+                        <li>Click on any task to see complete details</li>
+                        <li>Use the Edit button to update task information</li>
+                        <li>Check the checkbox to mark a task as complete</li>
+                    </ul>
+                </div>
+                
+                <div class="faq-section">
+                    <h3>Frequently Asked Questions</h3>
+                    
+                    <div class="faq-item">
+                        <h4>How do I delete a task?</h4>
+                        <p>You can delete a task by clicking the trash icon next to the task or by opening the task details and clicking the "Delete" button.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h4>Can I recover a deleted task?</h4>
+                        <p>Currently, task deletion is permanent. Always confirm before deleting a task.</p>
+                    </div>
+                    
+                    <!-- IH#1: Communicate benefits and value -->
+                    <div class="faq-item">
+                        <h4>Why should I use TaskPro?</h4>
+                        <p>TaskPro helps you stay organized, meet deadlines, and reduce stress by keeping all your academic responsibilities in one place. It's designed specifically for students.</p>
+                    </div>
+                </div>
+                
+                <div class="contact-section">
+                    <h3>Need More Help?</h3>
+                    <p>Contact us at <a href="mailto:support@taskpro.edu">support@taskpro.edu</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- IH#8: Prevent catastrophic errors (confirmation dialog) -->
+    <div id="confirmation-dialog" class="dialog">
+        <div class="dialog-content">
+            <h2>Confirm Action</h2>
+            <p id="dialog-message">Are you sure you want to proceed?</p>
+            
+            <div class="dialog-buttons">
+                <button id="confirm-yes" class="btn danger-btn">Yes, I'm Sure</button>
+                <button id="confirm-no" class="btn secondary-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
