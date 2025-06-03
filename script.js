@@ -1,28 +1,45 @@
-// TaskPro - JavaScript implementation
+// TaskPro - Enhanced JavaScript implementation with Microservices Integration
+
 // Main data store
 let tasks = [
     {
         id: 1,
         title: "CS361 Assignment 3",
-        dueDate: "2025-04-25",
+        dueDate: "2025-06-05",
         class: "CS361",
         priority: "high",
         status: "incomplete",
-        description: "Complete the microservices implementation with appropriate API endpoints. Be sure to include error handling and documentation."
+        description: "Complete the microservices implementation with appropriate API endpoints. Be sure to include error handling and documentation.",
+        estimatedHours: 6,
+        createdDate: "2025-05-15"
     },
     {
         id: 2,
         title: "Study for Midterm",
-        dueDate: "2025-04-28",
+        dueDate: "2025-06-03",
         class: "MATH241",
         priority: "medium",
         status: "in-progress",
-        description: "Review chapters 5-8 and practice problems from the study guide."
+        description: "Review chapters 5-8 and practice problems from the study guide.",
+        estimatedHours: 4,
+        createdDate: "2025-05-20"
     }
 ];
 
-// Current task ID (for tracking next task ID)
+// Current task ID and user info
 let currentTaskId = 3;
+let currentUser = {
+    email: "student@oregonstate.edu",
+    firstName: "John",
+    lastName: "Doe"
+};
+
+// Microservice URLs
+const MICROSERVICE_URLS = {
+    DUE_DATE_CALCULATOR: 'http://localhost:5001',
+    EMAIL_REMINDER: 'http://localhost:5002',
+    TASK_STATS: 'http://localhost:5003'
+};
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,9 +54,398 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Keyboard shortcuts
     setupKeyboardShortcuts();
+    
+    // Microservices integration
+    setupMicroservicesIntegration();
+    
+    // Load initial data
+    loadInitialData();
 });
 
-// Setup page navigation
+// Setup microservices integration
+function setupMicroservicesIntegration() {
+    // Add microservice features to the UI
+    addMicroserviceFeatures();
+    
+    // Setup event handlers for microservice features
+    setupMicroserviceEventHandlers();
+}
+
+function addMicroserviceFeatures() {
+    // Add due date analysis to dashboard
+    const dashboardActions = document.querySelector('.dashboard-actions');
+    if (dashboardActions) {
+        const dueDateWidget = document.createElement('div');
+        dueDateWidget.className = 'due-date-widget';
+        dueDateWidget.innerHTML = `
+            <button id="analyze-due-dates" class="btn secondary-btn">
+                <i class="fas fa-calendar-check"></i> Analyze Due Dates
+            </button>
+        `;
+        dashboardActions.appendChild(dueDateWidget);
+    }
+    
+    // Add stats widget to dashboard
+    const dashboardContainer = document.querySelector('.dashboard-container');
+    if (dashboardContainer) {
+        const statsWidget = document.createElement('div');
+        statsWidget.className = 'stats-widget';
+        statsWidget.innerHTML = `
+            <div class="widget-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">Task Statistics</h3>
+                <button id="refresh-stats" class="btn tertiary-btn">Refresh</button>
+            </div>
+            <div id="stats-content" class="stats-content">
+                <p>Loading statistics...</p>
+            </div>
+        `;
+        statsWidget.style.cssText = `
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            padding: 20px; 
+            margin-top: 20px;
+        `;
+        dashboardContainer.appendChild(statsWidget);
+    }
+    
+    // Add reminder settings to help page
+    const helpSection = document.querySelector('.help-section');
+    if (helpSection) {
+        const reminderSettings = document.createElement('div');
+        reminderSettings.className = 'reminder-settings-section';
+        reminderSettings.innerHTML = `
+            <h3>Email Reminder Settings</h3>
+            <div class="reminder-controls">
+                <label>
+                    <input type="checkbox" id="enable-reminders" checked> 
+                    Enable email reminders
+                </label>
+                <br><br>
+                <label for="reminder-timing">Send reminders:</label>
+                <select id="reminder-timing">
+                    <option value="1">1 day before due date</option>
+                    <option value="3">3 days before due date</option>
+                    <option value="7">7 days before due date</option>
+                </select>
+                <br><br>
+                <button id="save-reminder-settings" class="btn primary-btn">Save Settings</button>
+            </div>
+        `;
+        helpSection.appendChild(reminderSettings);
+    }
+}
+
+function setupMicroserviceEventHandlers() {
+    // Due date analyzer
+    const analyzeDueDatesBtn = document.getElementById('analyze-due-dates');
+    if (analyzeDueDatesBtn) {
+        analyzeDueDatesBtn.addEventListener('click', analyzeDueDates);
+    }
+    
+    // Stats refresher
+    const refreshStatsBtn = document.getElementById('refresh-stats');
+    if (refreshStatsBtn) {
+        refreshStatsBtn.addEventListener('click', refreshStats);
+    }
+    
+    // Reminder settings
+    const saveReminderBtn = document.getElementById('save-reminder-settings');
+    if (saveReminderBtn) {
+        saveReminderBtn.addEventListener('click', saveReminderSettings);
+    }
+}
+
+// Microservice API calls
+async function callMicroservice(service, endpoint, method = 'GET', data = null) {
+    try {
+        const url = `${MICROSERVICE_URLS[service]}${endpoint}`;
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+        
+        if (data && (method === 'POST' || method === 'PUT')) {
+            options.body = JSON.stringify(data);
+        }
+        
+        console.log(`=== MICROSERVICE CALL ===`);
+        console.log(`Service: ${service}`);
+        console.log(`Making ${method} request to ${url}`);
+        console.log('Request data:', data);
+        console.log('========================');
+        
+        const response = await fetch(url, options);
+        const responseData = await response.json();
+        
+        console.log('Response status:', response.status);
+        console.log('Response data:', responseData);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${responseData.error || 'Unknown error'}`);
+        }
+        
+        return responseData;
+    } catch (error) {
+        console.error(`Error calling ${service} microservice:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Due Date Calculator Integration (Microservice B)
+async function analyzeDueDates() {
+    // Get upcoming tasks using the batch endpoint
+    const tasksData = {
+        tasks: tasks.map(task => ({
+            id: task.id,
+            title: task.title,
+            due_date: task.dueDate
+        }))
+    };
+    
+    const result = await callMicroservice('DUE_DATE_CALCULATOR', '/api/duedate/batch-calculate', 'POST', tasksData);
+    
+    if (result.success) {
+        // Update task display with priority suggestions
+        updateTasksWithAnalysis(result.results);
+        
+        // Get upcoming tasks summary
+        const upcomingResult = await callMicroservice('DUE_DATE_CALCULATOR', '/api/duedate/upcoming', 'GET');
+        
+        if (upcomingResult.success) {
+            const { overdue, urgent, due_soon } = upcomingResult.summary;
+            let message = `Due Date Analysis:\n`;
+            if (overdue > 0) message += `• ${overdue} overdue tasks\n`;
+            if (urgent > 0) message += `• ${urgent} urgent tasks\n`;
+            if (due_soon > 0) message += `• ${due_soon} tasks due soon\n`;
+            
+            alert(message || 'All tasks have ample time!');
+        }
+    } else {
+        alert(`Error analyzing due dates: ${result.error}`);
+    }
+}
+
+function updateTasksWithAnalysis(analysisResults) {
+    // Add priority suggestions to task items
+    const taskItems = document.querySelectorAll('.task-item');
+    
+    taskItems.forEach(taskItem => {
+        const taskId = parseInt(taskItem.dataset.taskId);
+        const analysis = analysisResults.find(r => r.task_id === taskId);
+        
+        if (analysis && !analysis.error) {
+            // Remove existing priority badges
+            const existingBadge = taskItem.querySelector('.priority-badge');
+            if (existingBadge) {
+                existingBadge.remove();
+            }
+            
+            // Add new priority badge
+            const priorityBadge = document.createElement('span');
+            priorityBadge.className = 'priority-badge';
+            priorityBadge.textContent = `Suggested: ${analysis.suggested_priority.toUpperCase()}`;
+            priorityBadge.style.cssText = `
+                background: ${analysis.suggested_priority === 'high' ? '#e74c3c' : analysis.suggested_priority === 'medium' ? '#f39c12' : '#27ae60'};
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.8em;
+                margin-left: 10px;
+            `;
+            
+            const taskDetails = taskItem.querySelector('.task-details');
+            taskDetails.appendChild(priorityBadge);
+        }
+    });
+}
+
+// Task Stats Integration (Microservice D)
+async function refreshStats() {
+    const statsContent = document.getElementById('stats-content');
+    statsContent.innerHTML = '<p>Loading statistics...</p>';
+    
+    // Get dashboard data
+    const result = await callMicroservice('TASK_STATS', `/api/stats/dashboard-data?user_email=${currentUser.email}`);
+    
+    if (result.success) {
+        const stats = result.dashboard.overall_stats;
+        const categoryBreakdown = result.dashboard.category_breakdown;
+        const recentCompletions = result.dashboard.recent_completions;
+        
+        statsContent.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>${stats.total_completed}</h4>
+                    <p>Total Completed</p>
+                </div>
+                <div class="stat-item">
+                    <h4>${stats.this_week}</h4>
+                    <p>This Week</p>
+                </div>
+                <div class="stat-item">
+                    <h4>${stats.average_completion_time}</h4>
+                    <p>Avg Days to Complete</p>
+                </div>
+            </div>
+            
+            <div class="category-breakdown">
+                <h4>By Category:</h4>
+                ${Object.entries(categoryBreakdown).length > 0 ? 
+                    Object.entries(categoryBreakdown).map(([category, count]) => 
+                        `<span class="category-badge">${category}: ${count}</span>`
+                    ).join(' ') :
+                    '<p>No completed tasks yet</p>'
+                }
+            </div>
+            
+            <div class="recent-completions">
+                <h4>Recent Completions:</h4>
+                ${recentCompletions.length > 0 ? 
+                    recentCompletions.map(task => 
+                        `<div class="recent-task">${task.task_title} (${task.completion_date})</div>`
+                    ).join('') : 
+                    '<p>No recent completions</p>'
+                }
+            </div>
+        `;
+        
+        // Add CSS for stats display
+        if (!document.querySelector('#stats-styles')) {
+            const style = document.createElement('style');
+            style.id = 'stats-styles';
+            style.textContent = `
+                .stats-grid { display: flex; gap: 15px; margin-bottom: 15px; }
+                .stat-item { text-align: center; flex: 1; }
+                .stat-item h4 { margin: 0; font-size: 1.5em; color: var(--primary-color); }
+                .stat-item p { margin: 5px 0 0 0; font-size: 0.9em; color: var(--dark-gray); }
+                .category-badge { background: var(--light-gray); padding: 3px 8px; border-radius: 10px; margin: 2px; display: inline-block; font-size: 0.85em; }
+                .recent-task { font-size: 0.9em; margin: 5px 0; padding: 5px; background: var(--bg-color); border-radius: 4px; }
+            `;
+            document.head.appendChild(style);
+        }
+    } else {
+        statsContent.innerHTML = `<p style="color: red;">Error loading stats: ${result.error}</p>`;
+    }
+}
+
+// Email Reminder Integration (Microservice C)
+async function saveReminderSettings() {
+    const enableReminders = document.getElementById('enable-reminders').checked;
+    const reminderTiming = parseInt(document.getElementById('reminder-timing').value);
+    
+    const data = {
+        user_email: currentUser.email,
+        reminders_enabled: enableReminders,
+        reminder_timing: reminderTiming,
+        email_notifications: true
+    };
+    
+    const result = await callMicroservice('EMAIL_REMINDER', '/api/reminder/settings', 'PUT', data);
+    
+    if (result.success) {
+        alert('Reminder settings saved successfully!');
+    } else {
+        alert(`Error saving settings: ${result.error}`);
+    }
+}
+
+async function scheduleTaskReminder(taskId, taskTitle, dueDate, priority) {
+    const data = {
+        user_email: currentUser.email,
+        task_id: taskId,
+        task_title: taskTitle,
+        due_date: dueDate,
+        priority: priority
+    };
+    
+    const result = await callMicroservice('EMAIL_REMINDER', '/api/reminder/schedule', 'POST', data);
+    
+    if (result.success && result.reminder_id) {
+        console.log(`Reminder scheduled for task ${taskId} with ID ${result.reminder_id}`);
+    } else {
+        console.warn(`Failed to schedule reminder for task ${taskId}: ${result.error}`);
+    }
+}
+
+async function recordTaskCompletion(task) {
+    const data = {
+        task_id: task.id,
+        user_email: currentUser.email,
+        task_title: task.title,
+        category: task.class,
+        completion_date: new Date().toISOString().split('T')[0],
+        created_date: task.createdDate || new Date().toISOString().split('T')[0]
+    };
+    
+    const result = await callMicroservice('TASK_STATS', '/api/stats/record-completion', 'POST', data);
+    
+    if (result.success) {
+        console.log(`Task completion recorded for task ${task.id}`);
+        // Refresh stats display
+        setTimeout(refreshStats, 500);
+    } else {
+        console.warn(`Failed to record completion for task ${task.id}: ${result.error}`);
+    }
+}
+
+// Load initial data and setup
+async function loadInitialData() {
+    // Load user reminder settings
+    const settingsResult = await callMicroservice('EMAIL_REMINDER', `/api/reminder/settings?user_email=${currentUser.email}`);
+    if (settingsResult.success) {
+        const settings = settingsResult.settings;
+        const enableCheckbox = document.getElementById('enable-reminders');
+        const timingSelect = document.getElementById('reminder-timing');
+        
+        if (enableCheckbox) enableCheckbox.checked = settings.reminders_enabled;
+        if (timingSelect) timingSelect.value = settings.reminder_timing;
+    }
+    
+    // Load initial stats
+    refreshStats();
+    
+    // Schedule reminders for existing incomplete tasks
+    tasks.forEach(task => {
+        if (task.status !== 'complete') {
+            scheduleTaskReminder(task.id, task.title, task.dueDate, task.priority);
+        }
+    });
+}
+
+// Enhanced task management functions
+function addTaskWithMicroservices(taskData) {
+    // Add task to local storage
+    const newTask = {
+        ...taskData,
+        id: currentTaskId++,
+        createdDate: new Date().toISOString().split('T')[0]
+    };
+    
+    tasks.push(newTask);
+    
+    // Schedule reminder for new task
+    scheduleTaskReminder(newTask.id, newTask.title, newTask.dueDate, newTask.priority);
+    
+    return newTask;
+}
+
+function markTaskCompleteWithMicroservices(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+        task.status = 'complete';
+        
+        // Record completion in stats microservice
+        recordTaskCompletion(task);
+        
+        // Update UI
+        renderTasks();
+    }
+}
+
+// Setup page navigation (existing function enhanced)
 function setupNavigation() {
     // Welcome page navigation
     document.getElementById('login-btn').addEventListener('click', () => {
@@ -164,6 +570,7 @@ function showPage(pageId) {
     // Special actions for specific pages
     if (pageId === 'dashboard-page') {
         renderTasks();
+        refreshStats();
     }
 }
 
@@ -181,19 +588,15 @@ function setupForms() {
         const priority = document.getElementById('task-priority').value;
         const description = document.getElementById('task-description').value;
         
-        // Create new task
-        const newTask = {
-            id: currentTaskId++,
+        // Create new task using microservices
+        const newTask = addTaskWithMicroservices({
             title: title,
             dueDate: dueDate,
             class: taskClass,
             priority: priority,
             status: 'incomplete',
             description: description
-        };
-        
-        // Add to tasks array
-        tasks.push(newTask);
+        });
         
         // Reset form
         addTaskForm.reset();
@@ -229,6 +632,9 @@ function setupForms() {
             tasks[taskIndex].priority = priority;
             tasks[taskIndex].description = description;
             
+            // Schedule new reminder for updated task
+            scheduleTaskReminder(taskId, title, dueDate, priority);
+            
             // Refresh task details
             loadTaskDetails(taskId);
             
@@ -246,12 +652,17 @@ function setupTaskInteractions() {
     // Task marking as complete
     document.getElementById('mark-complete-btn').addEventListener('click', () => {
         const taskId = parseInt(document.getElementById('detail-task-title').dataset.taskId);
-        const taskIndex = tasks.findIndex(task => task.id === taskId);
+        const task = tasks.find(t => t.id === taskId);
         
-        if (taskIndex !== -1) {
-            tasks[taskIndex].status = tasks[taskIndex].status === 'incomplete' ? 'complete' : 'incomplete';
-            loadTaskDetails(taskId);
-            renderTasks();
+        if (task) {
+            if (task.status === 'incomplete') {
+                markTaskCompleteWithMicroservices(taskId);
+                loadTaskDetails(taskId);
+            } else {
+                task.status = 'incomplete';
+                loadTaskDetails(taskId);
+                renderTasks();
+            }
         }
     });
     
@@ -365,7 +776,12 @@ function renderTasks(sortBy = 'due-date') {
         
         // Checkbox event listener
         checkbox.addEventListener('change', () => {
-            task.status = checkbox.checked ? 'complete' : 'incomplete';
+            if (checkbox.checked) {
+                markTaskCompleteWithMicroservices(task.id);
+            } else {
+                task.status = 'incomplete';
+                renderTasks(document.getElementById('sort-tasks').value);
+            }
         });
         
         const content = document.createElement('div');
@@ -455,6 +871,9 @@ function renderTasks(sortBy = 'due-date') {
         emptyState.textContent = 'No tasks found. Create a new task to get started!';
         tasksContainer.appendChild(emptyState);
     }
+    
+    // Auto-analyze due dates after rendering
+    setTimeout(analyzeDueDates, 1000);
 }
 
 // Filter tasks by search term
@@ -548,4 +967,14 @@ function formatDate(dateString) {
 // Helper function to capitalize first letter
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Console logging for demonstration
+function logMicroserviceCall(service, endpoint, method, data) {
+    console.log(`=== MICROSERVICE CALL ===`);
+    console.log(`Service: ${service}`);
+    console.log(`Endpoint: ${endpoint}`);
+    console.log(`Method: ${method}`);
+    console.log(`Data:`, data);
+    console.log(`========================`);
 }
